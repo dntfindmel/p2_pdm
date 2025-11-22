@@ -1,13 +1,17 @@
-import { useState } from 'react';
-import { View, Text, Pressable, FlatList, TextInput } from 'react-native';
+import { Pressable, Text, View, FlatList, Linking } from 'react-native'
+import { useState } from "react";
+import { TextInput } from 'react-native-web'
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { faUser } from '@fortawesome/free-regular-svg-icons'
+import { faLinkedinIn, faInstagram } from '@fortawesome/free-brands-svg-icons'
 import styles from './assets/css/styles';
 
 export default function App() {
 
   const listaAnos = [2024, 2023, 2022, 2021, 2020];
   const equipeDev = [
-    { nome: 'Leonardo Alves', linkedin: 'https://www.linkedin.com/in/leonardo-alves-gomes-107239114', github: 'https://github.com/leagomes.com' },
-    { nome: 'Melyssa Moya', linkedin: 'https://www.linkedin.com/in/melyssa-moya/', github: 'https://github.com/dntfindmel.com' }
+    { nome: 'Leonardo Alves', linkedin: 'https://www.linkedin.com/in/leonardo-alves-gomes-107239114', instagram: 'https://instagram.com/leelep_', profileImage: './p2_pdm/assets/user.png'},
+    { nome: 'Melyssa Moya', linkedin: 'https://www.linkedin.com/in/melyssa-moya/', instagram: 'https://instagram.com/dntfindmel', profileImage: './p2_pdm/assets/user.png'}
   ];
 
   const [pesquisa, setPesquisa] = useState("");
@@ -76,18 +80,25 @@ export default function App() {
       <Text style={styles.heading}>Desenvolvido por</Text>
 
       <FlatList
-        horizontal={true}
         data={equipeDev}
-        renderItem={({ item }) =>
-          <View style={{ marginRight: 20 }}>
-            <Text>{item.nome}</Text>
-            <Text>{item.linkedin}</Text>
-            <Text>{item.github}</Text>
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <View style={{ width: 140, marginRight: 15, alignItems: "center" }}>
+            <FontAwesomeIcon icon={faUser} size={40} />
+            <Text style={{ marginVertical: 8 }}>{item.nome}</Text>
+            <View style={{ flexDirection: "row" }}>
+              <Pressable onPress={() => Linking.openURL(item.linkedin)} style={{ marginRight: 10 }}>
+                <FontAwesomeIcon icon={faLinkedinIn} size={25} />
+              </Pressable>
+              <Pressable onPress={() => Linking.openURL(item.instagram)}>
+                <FontAwesomeIcon icon={faInstagram} size={25} />
+              </Pressable>
+            </View>
           </View>
-        }
+        )}
         keyExtractor={(item, index) => index.toString()}
       />
-
     </View>
   );
 }
