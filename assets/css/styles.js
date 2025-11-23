@@ -46,9 +46,10 @@ export default StyleSheet.create({
   },
 
   searchArea: {
-    flexDirection: 'row',
-    width: '95%',
-    alignItems: 'center'
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "center",   // ⬅ centraliza horizontalmente
+    alignItems: "center",
   },
 
   searchInput: {
@@ -64,5 +65,15 @@ export default StyleSheet.create({
     borderRadius: 8,
     padding: 6,
     margin: 4,
+  },
+
+  searchInput: {
+    borderWidth: 2,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 5, 
+    width: "70%",
+    margin: 4,
+    placeholderTextColor: "#666",
   },
 });

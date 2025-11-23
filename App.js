@@ -25,7 +25,7 @@ export default function App() {
 
       <View style={styles.divider}></View>
 
-      <Text style={styles.heading}>Foto do Dia</Text>
+      <Text style={styles.heading}>Fotos do Dia</Text>
       <Text>Aqui vai a imagem</Text>
       <Text>Nome da Imagem</Text>
       <Text>Descrição da Imagem</Text>
@@ -35,14 +35,29 @@ export default function App() {
 
       <View style={styles.divider}></View>
 
-      <Text style={styles.heading}>Buscar Imagens</Text>
+      <View style={styles.searchArea}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder='Pesquisar imagens'
+          onChangeText={(txt) => setPesquisa(txt)}
+        />
+      </View>
+
+      <View>
+        <Pressable style={styles.searchButton}>
+          <Text>Buscar</Text>
+        </Pressable>
+      </View>
+
+      <Text>Mostrando imagens sobre "{pesquisa}"</Text>
+
+      <View>
+        <Text>Aqui vão aparecer as imagens</Text>
+      </View>
+
       <Text>Filtros</Text>
 
       <View style={styles.divider}></View>
-
-      <Pressable style={styles.yearButton}>
-        <Text>2025</Text>
-      </Pressable>
 
       <View style={styles.yearList}>
         <FlatList
@@ -57,23 +72,9 @@ export default function App() {
         />
       </View>
 
-      <View style={styles.searchArea}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder='Pesquisar imagens'
-          onChangeText={(txt) => setPesquisa(txt)}
-        />
-        <Pressable style={styles.searchButton}>
-          <Text>Buscar</Text>
-        </Pressable>
-      </View>
-
-      <Text style={styles.heading}>Resultados da Busca</Text>
-      <Text>Mostrando imagens sobre "{pesquisa}"</Text>
-
-      <View>
-        <Text>Aqui vão aparecer as imagens</Text>
-      </View>
+      <Pressable style={styles.yearButton}>
+        <Text>2025</Text>
+      </Pressable>
 
       <View style={styles.divider}></View>
 
