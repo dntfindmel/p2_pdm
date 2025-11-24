@@ -34,37 +34,36 @@ export default StyleSheet.create({
   },
 
   yearList: {
-    marginVertical: 10,
+    alignItems: 'center',
+    marginVertical: 6,
+        width: "70%",
   },
 
   yearButton: {
     borderWidth: 2,
     borderColor: '#000',
-    padding: 6,
-    margin: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginHorizontal: 6,
     borderRadius: 8,
+    minWidth: 30,
+    alignItems: 'center',
   },
+
 
   searchArea: {
-    flexDirection: "row",
     width: "100%",
-    justifyContent: "center",   // ⬅ centraliza horizontalmente
     alignItems: "center",
-  },
-
-  searchInput: {
-    borderWidth: 2,
-    borderRadius: 8,
-    padding: 6,
-    margin: 4,
-    flex: 1,
+    paddingHorizontal: 10,
   },
 
   searchButton: {
     borderWidth: 2,
     borderRadius: 8,
-    padding: 6,
-    margin: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    width: "70%",
+    alignItems: "center",
   },
 
   searchInput: {

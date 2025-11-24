@@ -46,5 +46,51 @@ app.get('/getPOTD', async (req, res) => {
   }
 })
 
+app.get('/getImagesByYear', async (req, res) => {
+  try {
+    const { query, startYear, endYear } = req.query
+
+    if (!startYear || !endYear) {
+      return res.status(400).json({ error: "Informe startYear e endYear" })
+    }
+
+    const result = await axios.get('https://images-api.nasa.gov/search', {
+      params: {
+        q: query || "",
+        media_type: "image",
+        year_start: startYear,
+        year_end: endYear
+      },
+      timeout: 20000
+    })
+
+    const items = result.data.collection.items || []
+
+    const limited = items.slice(0, 10)
+
+    const images = limited.map(item => {
+      const data = item.data[0]
+      const link = item.links ? item.links[0].href : null
+
+      return {
+        nasa_id: data.nasa_id,
+        title: data.title,
+        description: data.description,
+        date_created: data.date_created,
+        url: link
+      }
+    })
+
+    res.json(images)
+
+    console.log(result)
+  } catch (error) {
+    console.error('Erro /getImagesByYear:', error?.response?.data || error.message || error)
+    res.status(500).json({ error: "Erro ao buscar imagens" })
+  }
+})
+
+
+
 const port = process.env.PORT || 3000
 app.listen(port, () => console.log(`Servidor rodando na porta ${port}`))
