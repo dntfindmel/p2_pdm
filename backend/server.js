@@ -1,96 +1,91 @@
-require('dotenv').config()
-const express = require('express')
-const app = express()
-const axios = require('axios')
-const cors = require('cors')
+require("dotenv").config();
+const express = require("express");
+const axios = require("axios");
+const cors = require("cors");
 
-app.use(cors())
+const app = express();
+app.use(cors());
 
-
-function formatDateYYYYMMDD(d) {
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
+function formatarData(d) {
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return ano + "-" + mes + "-" + dia;
 }
 
-app.get('/getPOTD', async (req, res) => {
+app.get("/getPOTD", async (req, res) => {
   try {
-    let { date } = req.query
+    let data = req.query.date;
 
-    if (!date) {
-      const d = new Date()
-      d.setDate(d.getDate() - 1) 
-      date = formatDateYYYYMMDD(d)
+    if (!data) {
+      let hoje = new Date();
+      hoje.setDate(hoje.getDate() - 1);
+      data = formatarData(hoje);
     }
 
-    const result = await axios.get('https://api.nasa.gov/planetary/apod', {
+    let resposta = await axios.get("https://api.nasa.gov/planetary/apod", {
       params: {
         api_key: process.env.NASA_KEY,
-        date
-      },
-      timeout: 10000
-    })
+        date: data
+      }
+    });
 
     res.json({
-      date: result.data.date,
-      title: result.data.title,
-      explanation: result.data.explanation,
-      url: result.data.url,
-      media_type: result.data.media_type,
-      copyright: result.data.copyright || null
-    })
-  } catch (error) {
-    console.error('Erro /getPOTD:', error?.response?.data || error.message || error)
-    res.status(500).json({ error: "Erro ao buscar foto do dia" })
-  }
-})
+      date: resposta.data.date,
+      title: resposta.data.title,
+      explanation: resposta.data.explanation,
+      url: resposta.data.url,
+      media_type: resposta.data.media_type,
+      copyright: resposta.data.copyright
+    });
 
-app.get('/getImagesByYear', async (req, res) => {
+  } catch (e) {
+    res.status(500).json({ error: "Erro ao buscar APOD" });
+  }
+});
+
+app.get("/getImagesByYear", async (req, res) => {
   try {
-    const { query, startYear, endYear } = req.query
+    const { query, startYear, endYear } = req.query;
 
     if (!startYear || !endYear) {
-      return res.status(400).json({ error: "Informe startYear e endYear" })
+      return res.status(400).json({ error: "Informe startYear e endYear" });
     }
 
-    const result = await axios.get('https://images-api.nasa.gov/search', {
+    const resposta = await axios.get("https://images-api.nasa.gov/search", {
       params: {
         q: query || "",
         media_type: "image",
         year_start: startYear,
         year_end: endYear
-      },
-      timeout: 20000
-    })
+      }
+    });
 
-    const items = result.data.collection.items || []
+    let itens = resposta.data.collection.items;
+    let primeiros = itens.slice(0, 10);
 
-    const limited = items.slice(0, 10)
-
-    const images = limited.map(item => {
-      const data = item.data[0]
-      const link = item.links ? item.links[0].href : null
+    let imagens = primeiros.map((item) => {
+      let dados = item.data[0];
+      let link = item.links ? item.links[0].href : null;
 
       return {
-        nasa_id: data.nasa_id,
-        title: data.title,
-        description: data.description,
-        date_created: data.date_created,
+        nasa_id: dados.nasa_id,
+        title: dados.title,
+        description: dados.description,
+        date_created: dados.date_created,
         url: link
-      }
-    })
+      };
+    });
 
-    res.json(images)
+    res.json(imagens);
 
-    console.log(result)
-  } catch (error) {
-    console.error('Erro /getImagesByYear:', error?.response?.data || error.message || error)
-    res.status(500).json({ error: "Erro ao buscar imagens" })
+  } catch (e) {
+    res.status(500).json({ error: "Erro ao buscar imagens" });
   }
-})
+});
 
+const porta = process.env.PORT || 3000;
 
-
-const port = process.env.PORT || 3000
-app.listen(port, () => console.log(`Servidor rodando na porta ${port}`))
+app.listen(porta, () => {
+  console.log("Servidor rodando na porta " + porta);
+});

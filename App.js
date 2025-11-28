@@ -1,95 +1,127 @@
-import React, { useEffect, useState } from 'react'
-import { Pressable, Text, View, FlatList, Linking, Image, ActivityIndicator } from 'react-native'
-import { TextInput } from 'react-native-web'
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { faUser } from '@fortawesome/free-regular-svg-icons'
-import { faLinkedinIn, faInstagram } from '@fortawesome/free-brands-svg-icons'
-import styles from './assets/css/styles';
+import React, { useEffect, useState } from "react";
+import { View, Text, Image, TextInput, FlatList, Pressable, ScrollView, Linking } from "react-native";
+import styles from "./assets/css/styles";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faUser } from "@fortawesome/free-regular-svg-icons";
+import { faLinkedinIn, faInstagram } from "@fortawesome/free-brands-svg-icons";
 
 export default function App() {
 
-  const listaAnos = [2025, 2024, 2023, 2022, 2021, 2020];
-  const equipeDev = [
-    { nome: 'Leonardo Alves', linkedin: 'https://www.linkedin.com/in/leonardo-alves-gomes-107239114', instagram: 'https://instagram.com/leelep_', profileImage: './p2_pdm/assets/user.png'},
-    { nome: 'Melyssa Moya', linkedin: 'https://www.linkedin.com/in/melyssa-moya/', instagram: 'https://instagram.com/dntfindmel', profileImage: './p2_pdm/assets/user.png'}
+  const anos = [2025, 2024, 2023, 2022, 2021, 2020];
+
+  const equipe = [
+    {
+      nome: "Leonardo Alves",
+      linkedin: "https://www.linkedin.com/in/leonardo-alves-gomes-107239114",
+      instagram: "https://instagram.com/leelep_"
+    },
+    {
+      nome: "Melyssa Moya",
+      linkedin: "https://www.linkedin.com/in/melyssa-moya/",
+      instagram: "https://instagram.com/dntfindmel"
+    }
   ];
 
-const [pesquisa, setPesquisa] = useState("")
-const [apodList, setApodList] = useState([])   
-const [searchList, setSearchList] = useState([]) 
-const [apod, setApod] = useState(null)
-const [loadingApod, setLoadingApod] = useState(true)
-const [errorApod, setErrorApod] = useState(null)
-const [anoSelecionado, setAnoSelecionado] = useState(null)
+  const [textoPesquisa, setTextoPesquisa] = useState("");
+  const [listaApod, setListaApod] = useState([]);
+  const [listaBusca, setListaBusca] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
+  const [anoEscolhido, setAnoEscolhido] = useState(null);
 
+  const API = "http://localhost:3000";
 
-
-  const BASE_URL = 'http://localhost:3000'
-
-useEffect(() => {
-  const formatDate = (d) => {
-    const yyyy = d.getFullYear()
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const dd = String(d.getDate()).padStart(2, '0')
-    return `${yyyy}-${mm}-${dd}`
+  function formatarData(d) {
+    const ano = d.getFullYear();
+    const mes = String(d.getMonth() + 1).padStart(2, "0");
+    const dia = String(d.getDate()).padStart(2, "0");
+    return ano + "-" + mes + "-" + dia;
   }
 
-  const fetchThreeDays = async () => {
+  useEffect(() => {
+    buscarApod();
+  }, []);
+
+  async function buscarApod() {
     try {
-      setLoadingApod(true)
-      setErrorApod(null)
+      setCarregando(true);
+      setErro(null);
 
-      const base = new Date()
-      base.setDate(base.getDate() - 1) 
+      let diaBase = new Date();
+      diaBase.setDate(diaBase.getDate() - 1);
 
-      const dates = [
-        formatDate(new Date(base.getFullYear(), base.getMonth(), base.getDate())),       
-        formatDate(new Date(base.getFullYear(), base.getMonth(), base.getDate() - 1)),   
-        formatDate(new Date(base.getFullYear(), base.getMonth(), base.getDate() - 2))    
-      ]
+      let datas = [
+        formatarData(new Date(diaBase)),
+        formatarData(new Date(diaBase.getFullYear(), diaBase.getMonth(), diaBase.getDate() - 1)),
+        formatarData(new Date(diaBase.getFullYear(), diaBase.getMonth(), diaBase.getDate() - 2))
+      ];
 
-      const requests = dates.map(d =>
-        fetch(`${BASE_URL}/getPOTD?date=${d}`)
-          .then(r => {
-            if (!r.ok) throw new Error('status ' + r.status)
-            return r.json()
-          })
-          .catch(err => {
-            console.warn('Erro ao buscar', d, err)
-            return null
-          })
-      )
+      let listaTemp = [];
 
-      const results = await Promise.all(requests)
-      const valid = results.filter(Boolean)
+      for (let i = 0; i < datas.length; i++) {
+        try {
+          let resposta = await fetch(API + "/getPOTD?date=" + datas[i]);
+          if (resposta.ok) {
+            let dado = await resposta.json();
 
-      if (valid.length === 0) {
-        throw new Error('Nenhuma imagem retornada')
+            if (dado.media_type === "image") {
+              listaTemp.push(dado);
+            }
+          }
+        } catch (erro) {
+          console.log("Erro na data:", datas[i]);
+        }
       }
 
-      setApodList(valid)
-      setApod(valid[0]) 
-    } catch (err) {
-      console.error('Erro fetchThreeDays:', err)
-      setErrorApod('Não foi possível carregar as imagens')
-      const fallback = {
-        url: 'file:///mnt/data/8de1bb2b-8b36-4a9c-90bc-7d4ea1622b9c.png',
-        title: 'Fallback local',
-        date: new Date().toISOString().slice(0,10),
-        media_type: 'image'
+      if (listaTemp.length === 0) {
+        setErro("Falha ao buscar imagens");
       }
-      setApod(fallback)
-      setApodList([fallback])
+
+      setListaApod(listaTemp);
+    } catch (e) {
+      setErro("Erro ao carregar os dados");
     } finally {
-      setLoadingApod(false)
+      setCarregando(false);
     }
   }
 
-  fetchThreeDays()
-}, [])
+  async function buscarImagens() {
+    try {
+      setCarregando(true);
+      setErro(null);
+
+      let url = API + "/getImagesByYear?query=" + textoPesquisa;
+
+      if (anoEscolhido) {
+        url += "&startYear=" + anoEscolhido + "&endYear=" + anoEscolhido;
+      } else {
+        url += "&startYear=1900&endYear=2030";
+      }
+
+      let resposta = await fetch(url);
+
+      if (!resposta.ok) {
+        throw new Error("Erro na busca");
+      }
+
+      let dados = await resposta.json();
+      setListaBusca(dados);
+
+    } catch (erro) {
+      setErro("Erro ao buscar imagens");
+      setListaBusca([]);
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  function escolherAno(ano) {
+    setAnoEscolhido(ano);
+    buscarImagens();
+  }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 50 }}>
 
       <View style={styles.header}>
         <Text style={styles.pageName}>Daily Nasa</Text>
@@ -99,203 +131,115 @@ useEffect(() => {
 
       <Text style={styles.heading}>Fotos do Dia</Text>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 8 }}>
-        {apodList && apodList.length > 0 ? (
-          apodList.map((item, idx) => (
-            <View
-              key={idx}
-              style={{
-                marginHorizontal: 6,
-                borderWidth: 1,
-                borderColor: '#ddd',
-                padding: 4,
-                borderRadius: 6,
-              }}
-            >
-              <Image
-                source={{ uri: item.url }}
-                resizeMode="cover"
-                style={{ width: 110, height: 75, borderRadius: 4 }}
-                onError={(e) => console.warn('Erro miniatura', item.url, e.nativeEvent || e)}
-              />
-              <Text
-                style={{
-                  fontSize: 10,
-                  textAlign: 'center',
-                  marginTop: 4,
-                  width: 100, 
-                }}
-              >
-                {item.title}
-              </Text>
-
-              <Text
-                style={{
-                  fontSize: 10,
-                  textAlign: 'center',
-                  marginTop: 4,
-                  width: 100,
-                }}
-              >
-                {item.date}
-              </Text>
-
+      <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 10 }}>
+        {listaApod.length > 0 ? (
+          listaApod.map((item, i) => (
+            <View key={i} style={{ marginHorizontal: 6, borderWidth: 1, padding: 4 }}>
+              <Image source={{ uri: item.url }} style={{ width: 110, height: 75 }} />
+              <Text style={{ fontSize: 10, textAlign: "center", marginTop: 4 }}>{item.title}</Text>
+              <Text style={{ fontSize: 10, textAlign: "center" }}>{item.date}</Text>
             </View>
           ))
         ) : (
-          <Text>Sem histórico disponível</Text>
+          <Text>Nenhuma imagem</Text>
         )}
       </View>
 
-
       <Text>Histórico de imagens</Text>
-
       <View style={styles.divider}></View>
 
       <View style={styles.searchArea}>
         <TextInput
           style={styles.searchInput}
-          placeholder='Pesquisar imagens'
-          value={pesquisa}
-          onChangeText={(txt) => setPesquisa(txt)}
+          placeholder="Pesquisar imagens"
+          value={textoPesquisa}
+          onChangeText={setTextoPesquisa}
         />
-        <Pressable
-          style={styles.searchButton}
-          onPress={async () => {
-            try {
-              setLoadingApod(true)
-              setErrorApod(null)
 
-              let url = `${BASE_URL}/getImagesByYear?query=${pesquisa}`
-              if (anoSelecionado) {
-                url += `&startYear=${anoSelecionado}&endYear=${anoSelecionado}`
-              }
-
-              const response = await fetch(url)
-              if (!response.ok) throw new Error("Erro na busca")
-              const data = await response.json()
-
-              setSearchList(data)
-            } catch (err) {
-              console.error("Erro na busca:", err)
-              setErrorApod("Não foi possível carregar imagens")
-              setApodList([])
-            } finally {
-              setLoadingApod(false)
-            }
-          }}
-        >
+        <Pressable style={styles.searchButton} onPress={buscarImagens}>
           <Text>Buscar</Text>
         </Pressable>
       </View>
 
-      <View style={styles.yearList}>
-        <FlatList
-          horizontal={true}
-          data={listaAnos}
-          contentContainerStyle={{ justifyContent: "center", width: "100%" }}
-          renderItem={({ item }) =>
+      <View style={styles.yearListContainer}>
+        <View style={styles.yearListWrap}>
+          {anos.map((ano) => (
             <Pressable
+              key={ano}
               style={[
                 styles.yearButton,
-                item === anoSelecionado ? { backgroundColor: '#ccc' } : null
+                ano === anoEscolhido ? { backgroundColor: "#ccc" } : null
               ]}
-              onPress={async () => {
-                try {
-                  setAnoSelecionado(item)
-                  setLoadingApod(true)
-                  setErrorApod(null)
-
-                  let url = `${BASE_URL}/getImagesByYear?query=${pesquisa}&startYear=${item}&endYear=${item}`
-
-                  const response = await fetch(url)
-                  if (!response.ok) throw new Error("Erro na busca")
-                  const data = await response.json()
-
-                  setSearchList(data)
-                } catch (err) {
-                  console.error("Erro ao buscar por ano:", err)
-                  setErrorApod("Não foi possível carregar imagens")
-                  setApodList([])
-                } finally {
-                  setLoadingApod(false)
-                }
-              }}
+              onPress={() => escolherAno(ano)}
             >
-              <Text>{item}</Text>
+              <Text>{ano}</Text>
             </Pressable>
-          }
-          keyExtractor={(item) => item.toString()}
-        />
+          ))}
+        </View>
       </View>
 
-      {/* Texto de contexto */}
-      <Text>Mostrando imagens sobre "{pesquisa}"</Text>
+      <Text>Mostrando resultados para "{textoPesquisa}"</Text>
 
-      {/* Grid de imagens */}
       <View style={{ width: "100%", padding: 10 }}>
-        {searchList && searchList.length > 0 ? (
+        {listaBusca.length > 0 ? (
           <FlatList
-            data={searchList}
+            data={listaBusca}
             numColumns={2}
             keyExtractor={(item) => item.nasa_id}
             renderItem={({ item }) => (
-              <View
-                style={{
-                  flex: 1,
-                  margin: 6,
-                  borderWidth: 1,
-                  borderColor: "#ddd",
-                  borderRadius: 8,
-                  padding: 8,
-                  alignItems: "center",
-                }}
-              >
-                <Image
-                  source={{ uri: item.url }}
-                  resizeMode="cover"
-                  style={{ width: "100%", height: 120, borderRadius: 6 }}
-                />
+              <View style={{ flex: 1, margin: 6, borderWidth: 1, padding: 8 }}>
+                <Image source={{ uri: item.url }} style={{ width: "100%", height: 120 }} />
+
                 <Text style={{ fontWeight: "bold", marginTop: 6, textAlign: "center" }}>
                   {item.title}
                 </Text>
-                <Text style={{ fontSize: 12, marginTop: 4, textAlign: "center" }}>
+
+                <Text style={{ fontSize: 12, textAlign: "center", marginTop: 4 }}>
                   {item.description}
                 </Text>
               </View>
             )}
           />
         ) : (
-          <Text>Nenhuma imagem encontrada</Text>
+          <Text>Nenhum resultado encontrado</Text>
         )}
       </View>
 
-      <Text>Filtros</Text>
-
-      <View style={styles.divider}></View>
-
-      <Text style={styles.heading}>Desenvolvido por</Text>
+      <View style={styles.containerHeading}>
+        <Text style={[styles.heading, { textAlign: 'center', width: 'auto', paddingLeft: 0 }]}>
+          Desenvolvido por
+        </Text>
+      </View>
 
       <FlatList
-        data={equipeDev}
+        data={equipe}
         horizontal
+        keyExtractor={(item, index) => index.toString()}
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          paddingVertical: 10,
+        }}
         renderItem={({ item }) => (
-          <View style={{ width: 140, marginRight: 15, alignItems: "center" }}>
+          <View style={{ width: 140, alignItems: "center", marginRight: 15 }}>
             <FontAwesomeIcon icon={faUser} size={40} />
             <Text style={{ marginVertical: 8 }}>{item.nome}</Text>
+
             <View style={{ flexDirection: "row" }}>
               <Pressable onPress={() => Linking.openURL(item.linkedin)} style={{ marginRight: 10 }}>
                 <FontAwesomeIcon icon={faLinkedinIn} size={25} />
               </Pressable>
+
               <Pressable onPress={() => Linking.openURL(item.instagram)}>
                 <FontAwesomeIcon icon={faInstagram} size={25} />
               </Pressable>
             </View>
           </View>
         )}
-        keyExtractor={(item, index) => index.toString()}
       />
-    </View>
+
+    </ScrollView>
   );
 }

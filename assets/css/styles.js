@@ -3,8 +3,7 @@ import { StyleSheet } from 'react-native';
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    backgroundColor: "#fff",
   },
 
   header: {
@@ -75,4 +74,18 @@ export default StyleSheet.create({
     margin: 4,
     placeholderTextColor: "#666",
   },
+
+    yearListContainer: {
+    width: "100%",
+    paddingHorizontal: 10,
+    marginTop: 10,
+  },
+
+  yearListWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 10,
+  },
+
 });
